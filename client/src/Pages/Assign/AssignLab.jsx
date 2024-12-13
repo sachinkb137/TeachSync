@@ -17,7 +17,7 @@ function AssignLab() {
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        const response = await axios.get('https://automatic-timetable-generator.onrender.com/api/fetchsubjects');
+        const response = await axios.get('http://localhost:5000/api/subjects');
         console.log(response.data.data);
         setSubjects(response.data.data);
       } catch (error) {
@@ -27,7 +27,7 @@ function AssignLab() {
 
     const fetchTeachers = async () => {
       try {
-        const response = await axios.get('https://automatic-timetable-generator.onrender.com/api/fetchteachers');
+        const response = await axios.get('http://localhost:5000/api/teachers');
         console.log(response.data.data);
         setTeachers(response.data.data);
       } catch (error) {
@@ -42,7 +42,7 @@ function AssignLab() {
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        const response = await axios.get('https://automatic-timetable-generator.onrender.com/api/fetchlabs');
+        const response = await axios.get('http://localhost:5000/api/lab-assignments');
         console.log(response.data.data, "labs");
         setAssignments(response.data.data);
       } catch (error) {
@@ -55,13 +55,13 @@ function AssignLab() {
 
   const handleAssign = async () => {
     try {
-      await axios.post('https://automatic-timetable-generator.onrender.com/api/labassignments', {
+      await axios.post('http://localhost:5000/api/lab-assignments', {
         subjectId: selectedSubject,
         teacherId: selectedTeacher,
       });
       console.log('Assignment successful');
       toast.success('Assignment successful');
-      const response = await axios.get('https://automatic-timetable-generator.onrender.com/api/fetchlabs');
+      const response = await axios.get('http://localhost:5000/api/lab-assignments');
       console.log(response.data.data, "labs");
       setAssignments(response.data.data);
     } catch (error) {
@@ -79,7 +79,7 @@ function AssignLab() {
           label: 'Yes',
           onClick: async () => {
             try {
-              await axios.delete(`http://localhost:5000/api/deleteAssignments/${AssignmentId}`);
+              await axios.delete(`http://localhost:5000/api/lab-assignments/${AssignmentId}`);
               toast.success('Assignment deleted successfully');
               const updatedAssignments = assignments.filter(assignment => assignment._id !== AssignmentId);
               setAssignments(updatedAssignments);
@@ -171,19 +171,13 @@ function AssignLab() {
                             ))}
                           </td>
                           <td>
-                            {item.subjectId.map((subject, index) => (
-                              subject.subjectName
-                            ))}
+                            {item.subjectId.map((subject) => subject.subjectName)}
                           </td>
                           <td>
-                            {item.subjectId.map((subject, index) => (
-                              subject.department
-                            ))}
+                            {item.subjectId.map((subject) => subject.department)}
                           </td>
                           <td>
-                            {item.subjectId.map((subject, index) => (
-                              subject.semester
-                            ))}
+                            {item.subjectId.map((subject) => subject.semester)}
                           </td>
                           <td>
                             <button className="btn btn-danger" onClick={() => handleDeleteAssignment(item._id)}>Delete</button>

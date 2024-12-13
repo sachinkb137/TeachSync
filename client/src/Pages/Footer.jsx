@@ -9,7 +9,7 @@ const Footer = () => {
                 <div className="row">
                     <div className="col-md-4 border-end border-white">
                         <div className="d-flex align-items-center">
-                            <p className="mb-0">Sahil Golhar</p>
+                            <p className="mb-0">Sachin K B</p>
                             <span>&nbsp;|&nbsp;</span>
                             <FontAwesomeIcon icon={faGithub} className="me-2 text-white" />
                             <FontAwesomeIcon icon={faTwitter} className="me-2 text-white" />
@@ -17,12 +17,19 @@ const Footer = () => {
                             <FontAwesomeIcon icon={faLinkedin} className="me-2 text-white" />
                         </div>
                     </div>
-                    <div className="col-md-4 border-end border-white text-center">
-                        <p className="mb-0">Automatic Timetable Generator</p>
+                    <div className="col-md-4 border-end border-white">
+                        <div className="d-flex align-items-center">
+                            <p className="mb-0">Vikas B M</p>
+                            <span>&nbsp;|&nbsp;</span>
+                            <FontAwesomeIcon icon={faGithub} className="me-2 text-white" />
+                            <FontAwesomeIcon icon={faTwitter} className="me-2 text-white" />
+                            <FontAwesomeIcon icon={faInstagram} className="me-2 text-white" />
+                            <FontAwesomeIcon icon={faLinkedin} className="me-2 text-white" />
+                        </div>
                     </div>
                     <div className="col-md-4 text-end">
                         <div className="d-flex align-items-center justify-content-end">
-                            <p className="mb-0">Vedant Dalwi</p>
+                            <p className="mb-0">Tejas T M</p>
                             <span>&nbsp;|&nbsp;</span>
                             <FontAwesomeIcon icon={faGithub} className="me-2 text-white" />
                             <FontAwesomeIcon icon={faTwitter} className="me-2 text-white" />

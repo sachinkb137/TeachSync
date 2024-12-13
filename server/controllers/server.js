@@ -125,7 +125,7 @@
 
 //             for (const day of shuffledDays) {
 //                 let labScheduledToday = false;
-//                 for (let period = 0; period < 6; period++) {
+//                 for (let period = 0; period < 7; period++) {
 //                     if (subject.subjectType === 'Lab' && period > 4) {
 //                         continue; // Skip if there are no two consecutive slots left for Lab
 //                     }
@@ -420,38 +420,18 @@ function shuffle(array) {
 }
 
 // Initialize teacher availability object
-const teacherAvailability = {};
+let teacherAvailability = {};
 
 // Function to initialize teacher availability
 async function initializeTeacherAvailability() {
     const teachers = await Teacher.find();
-    for (const teacher of teachers) {
-        if (!teacherAvailability[teacher.teacherName]) {
-            teacherAvailability[teacher.teacherName] = Array.from({ length: 6 }, () => Array(6).fill(true));
-        }
-    }
-}
+    const numberOfDays = 6; // Monday to Saturday
+    const periodsPerDay = 7; // 7 periods a day
 
-function canHaveLecture(subject, day, period, timetable, department) {
-    // Check if the subject is a Lab
-    if (subject.subjectType === 'Lab') {
-        // Check if there's room for two consecutive slots for the Lab
-        if (period < 5 && !timetable[department][day][period] && !timetable[department][day][period + 1]) {
-            return true; // Allow scheduling the Lab in two consecutive slots
-        }
-    } else {
-        // Check if any period on the same day has the same subject scheduled
-        for (let p = 0; p < 6; p++) {
-            if (timetable[department][day][p]?.subject === subject.subjectName) {
-                return false;
-            }
-        }
-        // Check if the current period is available
-        if (!timetable[department][day][period]) {
-            return true;
-        }
+    teacherAvailability = {}; // Reset the availability at the start
+    for (const teacher of teachers) {
+        teacherAvailability[teacher.teacherName] = Array.from({ length: numberOfDays }, () => Array(periodsPerDay).fill(true));
     }
-    return false;
 }
 
 // Function to check if a teacher is available at the given day and period across all semesters
@@ -477,8 +457,8 @@ async function selectTeacher(subjectId, day, period, isLab = false) {
         // Find the teacher assigned to the given subject
         const assignment = await TheoryAssignment.findOne({ subjectId }).populate('teacherId');
 
-        if (assignment && assignment.teacherId && Array.isArray(assignment.teacherId)) {
-            const teachers = assignment.teacherId;
+        if (assignment && assignment.teacherId) {
+            const teachers = Array.isArray(assignment.teacherId) ? assignment.teacherId : [assignment.teacherId];
 
             for (const teacher of teachers) {
                 // Check if the teacher is available
@@ -487,30 +467,41 @@ async function selectTeacher(subjectId, day, period, isLab = false) {
                 }
             }
 
-            throw new Error('No available teacher found for this subject');
-        } else if (assignment && assignment.teacherId) {
-            const teacher = assignment.teacherId;
-
-            // Check if the teacher is available
-            if (teacherAvailable(teacher.teacherName, day, period, isLab)) {
-                return teacher;
-            } else {
-                throw new Error(`Teacher ${teacher.teacherName} is not available on day ${day} period ${period}`);
-            }
+            throw new Error(`No available teacher found for this subject on day ${day} period ${period}`);
         } else {
             throw new Error('No teacher assigned to this subject');
         }
     } catch (error) {
-        console.error('Error selecting teacher:', error);
+        console.error(`Error selecting teacher for subject ${subjectId} on day ${day}, period ${period}:`, error);
         throw error;
     }
+}
+function canHaveLecture(subject, day, period, timetables, type) {
+    const timetable = timetables[type];
+
+    // Check if the slot is already filled
+    if (timetable[day][period]) {
+        return false; // Slot already occupied
+    }
+
+    // Ensure no double bookings for labs (requires two consecutive slots)
+    if (subject.subjectType === 'Lab' && (period > 5 || timetable[day][period + 1])) {
+        return false; // Not enough consecutive slots for a lab
+    }
+
+    // Check additional constraints (e.g., department-specific rules)
+    if (subject.department && timetable[day][period]) {
+        return false; // Prevent scheduling conflicts within the same department
+    }
+
+    return true; // Slot is available
 }
 
 // Function to generate timetable for electives only
 async function generateElectiveTimetable(semester) {
     try {
         // Initialize timetable matrix for electives
-        const electiveTimetable = Array.from({ length: 6 }, () => Array(6).fill(null));
+        const electiveTimetable = Array.from({ length: 6 }, () => Array(7).fill(null)); // 7 periods per day
 
         // Fetch elective subjects for the semester
         const electives = await Subject.find({ semester, subjectType: 'Elective' });
@@ -531,9 +522,8 @@ async function generateElectiveTimetable(semester) {
 
             // Shuffle days for fairness
             const shuffledDays = shuffle([0, 1, 2, 3, 4, 5]); // Monday to Saturday
-
             // Shuffle periods for each day
-            const shuffledPeriods = shuffle([0, 1, 2, 3, 4, 5]);
+            const shuffledPeriods = shuffle([0, 1, 2, 3, 4, 5, 6]);
 
             for (const day of shuffledDays) {
                 for (const period of shuffledPeriods) {
@@ -567,11 +557,11 @@ async function generateElectiveTimetable(semester) {
 async function generateTimetableForDepartment(semester, department, electiveTimetable) {
     try {
         // Initialize timetable matrix for the department
-        const timetable = Array.from({ length: 6 }, () => Array(6).fill(null));
+        const timetable = Array.from({ length: 6 }, () => Array(7).fill(null)); // 7 periods per day
 
         // Fill elective slots in the timetable
         for (let day = 0; day < 6; day++) {
-            for (let period = 0; period < 6; period++) {
+            for (let period = 0; period < 7; period++) {
                 if (electiveTimetable[day][period]) {
                     timetable[day][period] = electiveTimetable[day][period];
                 }
@@ -602,8 +592,8 @@ async function generateTimetableForDepartment(semester, department, electiveTime
                 let labScheduledToday = false;
 
                 // Iterate over each period of the day, ensuring no gaps
-                for (let period = 0; period < 6; period++) {
-                    if (subjectGroup[0].subjectType === 'Lab' && period > 4) {
+                for (let period = 0; period < 7; period++) {
+                    if (subjectGroup[0].subjectType === 'Lab' && period > 5) {
                         continue; // Skip if there are no two consecutive slots left for Lab
                     }
 
@@ -650,8 +640,8 @@ async function generateTimetableForDepartment(semester, department, electiveTime
 exports.generateTimetableForAllSemesters = async (req, res) => {
     try {
         const allTimetables = [];
-        const semesters = ["I", "II", "III", "IV", "V", "VI"];
-        const departments = ["Computer-A", "Computer-B"]; // Add other departments as needed
+        const semesters = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+        const departments = ["Computer-A", "Computer-B", "Computer-C"]; // Hardcoded departments
 
         await initializeTeacherAvailability();
 
@@ -670,6 +660,7 @@ exports.generateTimetableForAllSemesters = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 }
+
 
 
 

@@ -13,7 +13,7 @@ function SideNavbar() {
           <div className="mt-4">
             <Link to="/" className="text-decoration-none ms-4 d-flex align-item-center text-white d-none d-sm-inline" role="button">
               <i className="bi bi-calendar-week fs-4"></i>
-              <span className="ms-3 fs-4">SCHEDULER</span>
+              <span className="ms-3 fs-4">TEACHSYNC</span>
             </Link>
             <hr className="text-white d-none d-sm-block"></hr>
             <ul className="nav nav-pills flex-column mt-5 " id="menu_item">

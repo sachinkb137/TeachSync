@@ -23,7 +23,7 @@ function AddRooms() {
 
   const fetchClassroom = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/fetchClassroom");
+      const response = await axios.get("http://localhost:5000/api/classrooms");
       setClassrooms(response?.data.data);
     } catch (error) {
       toast.error("Error fetching classroom:", error);
@@ -39,7 +39,7 @@ function AddRooms() {
           label: 'Yes',
           onClick: async () => {
             try {
-              const response = await axios.delete(`http://localhost:5000/api/deleteClassroom/${id}`);
+              const response = await axios.delete(`http://localhost:5000/api/classrooms/${id}`);
               if (response.status === 200) {
                 toast.success('Subject deleted successfully');
                 setRefereshToken(response);

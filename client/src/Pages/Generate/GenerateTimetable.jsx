@@ -93,7 +93,7 @@ const Timetable = () => {
   const [timetableData, setTimetableData] = useState([]);
 
   useEffect(() => {
-    axios.get("https://automatic-timetable-generator.onrender.com/api/generateTimeTable")
+    axios.get("http://localhost:5000/api/generate-timetable")
       .then(response => {
         console.log(response, "response");
         setTimetableData(response.data.timetable);
@@ -113,12 +113,13 @@ const Timetable = () => {
             <thead className="thead-dark">
               <tr>
                 <th>Day</th>
-                <th>Period 1</th>
-                <th>Period 2</th>
-                <th>Period 3</th>
-                <th>Period 4</th>
-                <th>Period 5</th>
-                <th>Period 6</th>
+                <th>8:00-9:00</th>
+                <th>9:00-10:00</th>
+                <th>10:30-11:30</th>
+                <th>11:30-12:30</th>
+                <th>2:00-3:00</th>
+                <th>3:00-4:00</th>
+                <th>4:00-5:00</th> {/* Added Period 7 */}
               </tr>
             </thead>
             <tbody>
@@ -132,6 +133,11 @@ const Timetable = () => {
                       </div>
                     </td>
                   ))}
+                  <td className="p-3">
+                    <div className="border p-2 bg-light">
+                      {day[6] ? `${day[6].subject} - ${day[6].teacher}` : "-"} {/* Display Period 7 */}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
