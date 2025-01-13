@@ -17,43 +17,72 @@ const AssignClassroom = require('../models/classAssignModel')
 
 const { response } = require('express');
 //subject
-
-
 exports.addSubject = async (req, res) => {
-  console.log("Received data:", req.body);
-  try {
-    const { subjectType, subjectName, subjectCode, semester, teachingHoursPerWeek, credits, department } = req.body;
-
-    // Ensure subjectType is valid
-    if (!['Theory', 'Lab', 'Elective'].includes(subjectType)) {
-      return res.status(400).json({ success: false, message: "Invalid subjectType" });
+    console.log("Received data:", req.body);
+    try {
+      const {
+        subjectType,
+        subjectName,
+        subjectCode,
+        semester,
+        teachingHoursPerWeek,
+        credits,
+        department,
+      } = req.body;
+  
+      // Validate subjectType
+      if (!['Theory', 'Lab', 'Elective'].includes(subjectType)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid subjectType. Allowed values are 'Theory', 'Lab', and 'Elective'.",
+        });
+      }
+  
+      // Check if the subject already exists in the same department
+      const existingSubject = await Subject.findOne({
+        subjectCode,
+        department,
+        subjectType,
+        subjectName,
+        semester,
+        credits,
+      });
+  
+      if (existingSubject) {
+        return res.status(400).json({
+          success: false,
+          message: `Subject with the same code "${subjectCode}" already exists in the "${department}" department.`,
+        });
+      }
+  
+      // Create and save the new subject document
+      const newSubject = new Subject({
+        subjectType,
+        subjectName,
+        subjectCode,
+        semester,
+        teachingHoursPerWeek,
+        credits,
+        department,
+      });
+  
+      await newSubject.save();
+  
+      res.status(201).json({
+        success: true,
+        message: "Subject added successfully.",
+        data: newSubject,
+      });
+    } catch (error) {
+      console.error("Error adding subject:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
     }
-
-    // Ensure subjectCode is unique and not already used
-    const existingSubject = await Subject.findOne({ subjectCode });
-    if (existingSubject) {
-      return res.status(400).json({ success: false, message: "Subject code already exists" });
-    }
-
-    // Create the new subject document
-    const newSubject = new Subject({
-      subjectType,
-      subjectName,
-      subjectCode,
-      semester,
-      teachingHoursPerWeek,
-      credits,
-      department
-    });
-
-    await newSubject.save(); // Save the new subject to the database
-    res.status(201).json(newSubject);
-  } catch (error) {
-    console.error('Error adding subject:', error);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
-  }
-};
-
+  };
+  
+  
 exports.fetchSubject = async (req, res) => {
     try {
         const subjects = await Subject.find();  // Fetch all subjects from the database

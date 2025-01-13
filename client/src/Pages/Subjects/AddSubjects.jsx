@@ -46,14 +46,22 @@ function AddSubjects() {
     e.preventDefault();
     try {
       // Check for missing required fields
-      const requiredFields = ["subjectType", "subjectName", "subjectCode", "semester", "teachingHoursPerWeek", "credits", "department"];
+      const requiredFields = [
+        "subjectType",
+        "subjectName",
+        "subjectCode",
+        "semester",
+        "teachingHoursPerWeek",
+        "credits",
+        "department",
+      ];
       for (const field of requiredFields) {
         if (!formData[field]) {
           toast.error(`Missing required field: ${field}`);
           return;
         }
       }
-
+  
       const response = await axios.post("http://localhost:5000/api/subjects", formData);
       if (response.status === 201) {
         toast.success("Subject added successfully");
@@ -68,14 +76,17 @@ function AddSubjects() {
           department: "",
         });
       } else {
-        console.error("Failed to add subject");
+        console.error("Failed to add subject:", response);
       }
     } catch (error) {
-      toast.error('Error adding subject: ' + (error.response?.data?.message || "Unexpected error"));
       console.error("Error adding subject:", error);
+      console.error("Error details:", error.response?.data);
+      toast.error(
+        "Error adding subject: " + (error.response?.data?.message || "Unexpected error")
+      );
     }
   };
-
+  
   const handleDelete = async (id) => {
     confirmAlert({
       title: "Confirm Deletion",
