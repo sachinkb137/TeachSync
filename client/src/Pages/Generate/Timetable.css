@@ -1,0 +1,103 @@
+/* Overall table container styling */
+.table-container {
+    overflow-x: auto;  /* Fixed this line */
+    padding: 1.5rem;
+    background-color: #f7fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0; /* Add border around the table container */
+  }
+  
+  /* Table styling */
+  .time-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0; /* Add border around the table */
+  }
+  
+  /* Header of the table */
+  .table-header {
+    padding: 1rem;
+    background-color: #edf2f7;
+    text-align: left;
+    font-weight: bold;
+    color: #4a5568;
+    border-bottom: 2px solid #e2e8f0; /* Add bottom border */
+    font-size: 0.875rem;
+    text-transform: uppercase;
+  }
+  
+  /* Table row styling for odd and even rows */
+  .table-row {
+    transition: background-color 0.3s ease;
+  }
+  
+  .table-row:hover {
+    background-color: #f7fafc;
+  }
+  
+  /* Even and odd row color styling */
+  .even-row {
+    background-color: #ffffff;
+  }
+  
+  .odd-row {
+    background-color: #f9fafb;
+  }
+  
+  /* Table cell */
+  .table-cell {
+    padding: 1rem;
+    border: 1px solid #e2e8f0; /* Add border around cells */
+    font-size: 0.875rem;
+    color: #4a5568;
+  }
+  
+  /* Slot details styling */
+  .slot-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .subject-name {
+    font-weight: 600;
+    color: #2d3748;
+  }
+  
+  .teacher-name, .room {
+    color: #718096;
+    font-size: 0.875rem;
+  }
+  
+  .subject-type {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    text-transform: capitalize;
+  }
+  
+  .subject-type.theory {
+    background-color: #e0f7fa;
+    color: #00796b;
+  }
+  
+  .subject-type.lab {
+    background-color: #c8e6c9;
+    color: #388e3c;
+  }
+  
+  .subject-type.other {
+    background-color: #f3e5f5;
+    color: #9c27b0;
+  }
+  
+  .no-slot {
+    color: #d1d5db;
+    font-style: italic;
+    text-align: center;
+    display: block;
+  }
+  
