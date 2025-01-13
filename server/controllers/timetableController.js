@@ -291,21 +291,26 @@ exports.fetchLabs = async (req, res) => {
 // Controller function to assign classroom
 
 // Assign classroom
+
+
 exports.assignClassRoom = async (req, res) => {
     console.log("Request Body:", req.body);  // Log the request body for debugging
     try {
-        const { course, semester, classroomCode } = req.body;
+        const { course, semester, classroom } = req.body;
 
         // Validate required fields
-        if (!course || !semester || !classroomCode) {
+        if (!course || !semester || !classroom || !classroom.classroomCode) {
+            console.log("Validation Error: Missing required fields");
             return res.status(400).json({ success: false, message: "All fields (course, semester, and classroom) are required" });
         }
 
+        const classroomCode = classroom.classroomCode;
         console.log(`Assigning classroom: Course: ${course}, Semester: ${semester}, Classroom Code: ${classroomCode}`);
         
         // Check if classroomCode exists in the Classroom collection
-        const classroom = await Classroom.findOne({ classroomCode });
-        if (!classroom) {
+        const classroomExists = await Classroom.findOne({ classroomCode });
+        if (!classroomExists) {
+            console.log("Validation Error: Classroom with this code does not exist");
             return res.status(404).json({ success: false, message: "Classroom with this code does not exist" });
         }
 
@@ -313,7 +318,7 @@ exports.assignClassRoom = async (req, res) => {
         const newClassroomAssignment = new AssignClassroom({ 
             course, 
             semester, 
-            classroomCode 
+            classroomCode: classroomExists._id // Use the ObjectId of the classroom
         });
 
         await newClassroomAssignment.save();

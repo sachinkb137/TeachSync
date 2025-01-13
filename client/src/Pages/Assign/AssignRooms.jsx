@@ -40,18 +40,17 @@ function AssignClassrooms() {
     const handleAssign = async (e) => {
         e.preventDefault();
         try {
-            // Send the course, semester, and classroom object data (classroom._id)
+            // Send the course, semester, and classroom code data
             const assignmentData = {
                 course: selectedCourse,
                 semester: selectedSemester,
-                classroomCode: selectedClassroom._id, // Send the ObjectId of the classroom
+                classroom: selectedClassroom, // Ensure this is the correct field
             };
-    
-            // Post the data to the backend
+            console.log('Assignment Data:', assignmentData);
             await axios.post('http://localhost:5000/api/classroom-assignments', assignmentData);
             toast.success('Classroom assigned successfully');
             
-            // Fetch updated assignments after the assignment is created
+            // Fetch updated assignments after assignment is created
             const response = await axios.get('http://localhost:5000/api/classroom-assignments');
             setAssignments(response.data.data);
         } catch (error) {
@@ -59,8 +58,6 @@ function AssignClassrooms() {
             toast.error('Error assigning classroom');
         }
     };
-    
-
     const handleDelete = async (assignmentId) => {
         try {
             await axios.delete(`http://localhost:5000/api/classroom-assignments/${assignmentId}`);

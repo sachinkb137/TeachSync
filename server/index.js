@@ -18,6 +18,7 @@ mongoose.connect(mongoURI)
 const timetableRoutes = require('./routes/timetableRoute');
 const authRoutes = require('./routes/authRoutes');
 
+
 // Set up routes
 app.use('/api', authRoutes);
 app.use('/api', timetableRoutes);
