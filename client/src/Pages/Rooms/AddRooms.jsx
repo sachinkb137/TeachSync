@@ -14,7 +14,7 @@ function AddRooms() {
   const [classrooms, setClassrooms] = useState([]);
 
   const [formData, setFormData] = useState({
-    classroomName: ""
+    classroomCode: ""
   });
 
   useEffect(() => {
@@ -26,7 +26,7 @@ function AddRooms() {
       const response = await axios.get("http://localhost:5000/api/classrooms");
       setClassrooms(response?.data.data);
     } catch (error) {
-      toast.error("Error fetching classroom:", error);
+      toast.error("Error fetching classrooms:", error);
     }
   };
 
@@ -41,7 +41,7 @@ function AddRooms() {
             try {
               const response = await axios.delete(`http://localhost:5000/api/classrooms/${id}`);
               if (response.status === 200) {
-                toast.success('Subject deleted successfully');
+                toast.success('Classroom deleted successfully');
                 setRefereshToken(response);
               } else {
                 console.error('Failed to delete classroom');
@@ -76,17 +76,15 @@ function AddRooms() {
     try {
       const response = await axios.post('http://localhost:5000/api/classrooms', formData);
       if (response.status === 201) {
-        toast.success('ClassRoom added successfully', { autoClose: 5000 });
+        toast.success('Classroom added successfully', { autoClose: 5000 });
         setRefereshToken(response)
-
       } else {
-        console.error('Failed to add Classroom');
+        console.error('Failed to add classroom');
         setRefereshToken(response)
       }
     } catch (error) {
       console.error('Error:', error);
     }
-
   };
 
   return (
@@ -104,37 +102,17 @@ function AddRooms() {
               <div className="col-sm-6 p-4" style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.1)" }}>
                 <form onSubmit={handleSubmit}>
                   <div className="mb-3">
-                    <label htmlFor="classroomName" className="form-label">
+                    <label htmlFor="classroomCode" className="form-label">
                       <FontAwesomeIcon icon={faChalkboard} className="me-2" />
-                      <span style={{ fontSize: "1.3rem", fontWeight: "bold" }}>Classroom Name:</span>
+                      <span style={{ fontSize: "1.3rem", fontWeight: "bold" }}>Classroom Code:</span>
                     </label>
-                    <select
-                      className="form-select"
-                      id="classroomName"
-                      name="classroomName"
-                      value={formData.classroomName}
-                      onChange={handleChange}
-                      style={{ fontWeight: "bold", borderColor: "#77757c" }}
-                    >
-                      <option value="">Select Classroom</option>
-                      <option value="Computer-2A">Computer-2A</option>
-                      <option value="Computer-2B">Computer-2B</option>
-                      <option value="Computer-3A">Computer-3A</option>
-                      <option value="Computer-3B">Computer-3B</option>
-                      <option value="Mechanical">Mechanical</option>
-                      <option value="Civil">Civil</option>
-                      <option value="Electrical">Electrical</option>
-                    </select>
-                  </div>
-
-                  <div className="mb-3">
                     <input
                       type="text"
                       className="form-control"
-                      id="classroomNameInput"
-                      name="classroomName"
-                      placeholder="Type Classroom Name (e.g., Computer-3A, Mechanical-3)"
-                      value={formData.classroomName}
+                      id="classroomCode"
+                      name="classroomCode"
+                      placeholder="Type Classroom Code (e.g.,CSL001,Nano1)"
+                      value={formData.classroomCode}
                       onChange={handleChange}
                       style={{ fontWeight: "bold", borderColor: "#77757c" }}
                     />
@@ -147,40 +125,40 @@ function AddRooms() {
                   </div>
                 </form>
 
+              </div>
             </div>
-          </div>
-          <div>
-            <h2 className="mt-5 mb-3 text-center">Added Classrooms</h2>
-            <table className="table table-striped">
-              <thead className="thead-light">
-                <tr>
-                  <th sclassName="tables" cope="col">#</th>
-                  <th className="tables" scope="col">Classroom Name</th>
-                  <th className="tables" scope="col">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {classrooms.map((item, index) => (
-                  <tr key={index}>
-                    <th scope="row">{index + 1}</th>
-                    <td>{item.classroomName}</td>
-                    <td>
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => handleDelete(item._id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
+            <div>
+              <h2 className="mt-5 mb-3 text-center">Added Classrooms</h2>
+              <table className="table table-striped">
+                <thead className="thead-light">
+                  <tr>
+                    <th className="tables" scope="col">#</th>
+                    <th className="tables" scope="col">Classroom Code</th>
+                    <th className="tables" scope="col">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {classrooms.map((item, index) => (
+                    <tr key={index}>
+                      <th scope="row">{index + 1}</th>
+                      <td>{item.classroomCode}</td>
+                      <td>
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => handleDelete(item._id)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
+          </div>
         </div>
       </div>
-    </div >
     </>
   );
 }

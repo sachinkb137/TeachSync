@@ -1,12 +1,21 @@
 const mongoose = require('mongoose');
 
-const classroomSchema = new mongoose.Schema({
-  course: String,
-  year: String,
-  section: String,
-  classroom: String
+const assignClassroomSchema = new mongoose.Schema({
+  course: {
+    type: String,
+    required: true
+  },
+  semester: {
+    type: String,
+    required: true
+  },
+  classroomCode: {
+    type: mongoose.Schema.Types.ObjectId, // Corrected to ObjectId for referencing another model
+    ref: 'Classroom', // Refers to the Classroom model
+    required: true
+  }
 });
 
-const AssignClassroom = mongoose.model('AssignClassroom', classroomSchema);
+const AssignClassroom = mongoose.model('AssignClassroom', assignClassroomSchema);
 
 module.exports = AssignClassroom;

@@ -7,16 +7,14 @@ import 'react-toastify/dist/ReactToastify.css';
 function AssignClassrooms() {
     const [classrooms, setClassrooms] = useState([]);
     const [selectedCourse, setSelectedCourse] = useState('');
-    const [selectedYear, setSelectedYear] = useState('');
-    const [selectedSection, setSelectedSection] = useState('');
+    const [selectedSemester, setSelectedSemester] = useState('');
     const [selectedClassroom, setSelectedClassroom] = useState('');
     const [assignments, setAssignments] = useState([]);
-    const [sections, setSections] = useState([]);
 
     useEffect(() => {
         const fetchClassrooms = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/classroom-assignments');
+                const response = await axios.get('http://localhost:5000/api/classrooms');
                 setClassrooms(response.data.data);
             } catch (error) {
                 console.error('Error fetching classrooms:', error);
@@ -25,14 +23,6 @@ function AssignClassrooms() {
 
         fetchClassrooms();
     }, []);
-
-    useEffect(() => {
-        if (selectedCourse === 'computer') {
-            setSections(['A', 'B']);
-        } else {
-            setSections([]);
-        }
-    }, [selectedCourse]);
 
     useEffect(() => {
         const fetchAssignments = async () => {
@@ -50,45 +40,57 @@ function AssignClassrooms() {
     const handleAssign = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/classroom-assignments', {
+            // Send the course, semester, and classroom object data (classroom._id)
+            const assignmentData = {
                 course: selectedCourse,
-                year: selectedYear,
-                section: selectedSection,
-                classroom: selectedClassroom.classroomName
-            });
+                semester: selectedSemester,
+                classroomCode: selectedClassroom._id, // Send the ObjectId of the classroom
+            };
+    
+            // Post the data to the backend
+            await axios.post('http://localhost:5000/api/classroom-assignments', assignmentData);
             toast.success('Classroom assigned successfully');
+            
+            // Fetch updated assignments after the assignment is created
             const response = await axios.get('http://localhost:5000/api/classroom-assignments');
             setAssignments(response.data.data);
         } catch (error) {
             console.error('Error assigning classroom:', error);
+            toast.error('Error assigning classroom');
         }
     };
+    
 
     const handleDelete = async (assignmentId) => {
         try {
             await axios.delete(`http://localhost:5000/api/classroom-assignments/${assignmentId}`);
             toast.success('Assignment deleted successfully');
+            
+            // Fetch updated assignments after deletion
             const response = await axios.get('http://localhost:5000/api/classroom-assignments');
             setAssignments(response.data.data);
         } catch (error) {
             console.error('Error deleting assignment:', error);
+            toast.error('Error deleting assignment');
         }
     };
 
     const courses = [
-        { id: 'computer', name: 'Computer' },
-        { id: 'mechanical', name: 'Mechanical' },
-        { id: 'electrical', name: 'Electrical' },
-        { id: 'civil', name: 'Civil' },
+        { id: 'computer-a', name: 'Computer-A' },
+        { id: 'computer-b', name: 'Computer-B' },
+        { id: 'computer-c', name: 'Computer-C' },
+        { id: 'aids', name: 'AIML' },
+        { id: 'aids', name: 'AIDS' }
     ];
 
-    const years = ['2nd', '3rd', '4th'];
+    // Semesters from 1 to 8
+    const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
 
-    // Filter assigned classrooms based on selected course, year, and section
+    // Filter assigned classrooms based on selected course and semester
     const filteredClassrooms = classrooms.filter(classroom => {
         // Check if the current classroom is not already assigned
         return !assignments.some(assignment =>
-            assignment.classroom === classroom.classroomName
+            assignment.classroom === classroom.classroomCode
         );
     });
 
@@ -105,7 +107,12 @@ function AssignClassrooms() {
                         <div className="row">
                             <div className="col-md-4 mb-3">
                                 <label htmlFor="course" className="form-label custom-label">Choose Course:</label>
-                                <select id="course" className="form-select custom-select" onChange={(e) => setSelectedCourse(e.target.value)}>
+                                <select
+                                    id="course"
+                                    className="form-select custom-select"
+                                    onChange={(e) => setSelectedCourse(e.target.value)}
+                                    value={selectedCourse}
+                                >
                                     <option value="">Select Course</option>
                                     {courses.map(course => (
                                         <option key={course.id} value={course.id}>
@@ -115,36 +122,33 @@ function AssignClassrooms() {
                                 </select>
                             </div>
                             <div className="col-md-4 mb-3">
-                                <label htmlFor="year" className="form-label custom-label">Select Year:</label>
-                                <select id="year" className="form-select custom-select" onChange={(e) => setSelectedYear(e.target.value)}>
-                                    <option value="">Select Year</option>
-                                    {years.map(year => (
-                                        <option key={year} value={year}>{year} Year</option>
+                                <label htmlFor="semester" className="form-label custom-label">Select Semester:</label>
+                                <select
+                                    id="semester"
+                                    className="form-select custom-select"
+                                    onChange={(e) => setSelectedSemester(e.target.value)}
+                                    value={selectedSemester}
+                                >
+                                    <option value="">Select Semester</option>
+                                    {semesters.map(semester => (
+                                        <option key={semester} value={semester}>{semester}</option>
                                     ))}
                                 </select>
-                            </div>
-                            <div className="col-md-4 mb-3">
-                                {selectedCourse === 'computer' && (
-                                    <div>
-                                        <label htmlFor="section" className="form-label custom-label">Select Section:</label>
-                                        <select id="section" className="form-select custom-select" onChange={(e) => setSelectedSection(e.target.value)}>
-                                            <option value="">Select Section</option>
-                                            {sections.map(section => (
-                                                <option key={section} value={section}>{section}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
                             </div>
                         </div>
                         <div className="row">
                             <div className="col-md-4 mb-3">
                                 <label htmlFor="classroom" className="form-label custom-label">Choose Classroom:</label>
-                                <select id="classroom" className="form-select custom-select" onChange={(e) => setSelectedClassroom(JSON.parse(e.target.value))}>
+                                <select
+                                    id="classroom"
+                                    className="form-select custom-select"
+                                    onChange={(e) => setSelectedClassroom(JSON.parse(e.target.value))}
+                                    value={selectedClassroom ? JSON.stringify(selectedClassroom) : ''}
+                                >
                                     <option value="">Select Classroom</option>
                                     {filteredClassrooms.map(classroom => (
                                         <option key={classroom._id} value={JSON.stringify(classroom)}>
-                                            {classroom.classroomName}
+                                            {classroom.classroomCode}
                                         </option>
                                     ))}
                                 </select>
@@ -163,8 +167,7 @@ function AssignClassrooms() {
                                         <thead>
                                             <tr>
                                                 <th>Course</th>
-                                                <th>Year</th>
-                                                <th>Section</th>
+                                                <th>Semester</th>
                                                 <th>Classroom</th>
                                                 <th>Action</th>
                                             </tr>
@@ -173,8 +176,7 @@ function AssignClassrooms() {
                                             {assignments.map((item, index) => (
                                                 <tr key={index} className={index % 2 === 0 ? 'table-light' : 'table-secondary'}>
                                                     <td>{item.course}</td>
-                                                    <td>{item.year}</td>
-                                                    <td>{item.section}</td>
+                                                    <td>{item.semester}</td>
                                                     <td>{item.classroom}</td>
                                                     <td>
                                                         <button className="btn btn-danger" onClick={() => handleDelete(item._id)}>Delete</button>

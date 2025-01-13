@@ -6,6 +6,7 @@ import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-toastify/dist/ReactToastify.css';
+import Select from 'react-select';  // Importing react-select
 
 function AssignElectives() {
     const [subjects, setSubjects] = useState([]);
@@ -17,7 +18,7 @@ function AssignElectives() {
     useEffect(() => {
         const fetchSubjects = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/subjects'); // Changed to localhost
+                const response = await axios.get('http://localhost:5000/api/subjects');
                 console.log(response.data.data);
                 setSubjects(response.data.data);
             } catch (error) {
@@ -27,7 +28,7 @@ function AssignElectives() {
 
         const fetchTeachers = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/teachers'); // Changed to localhost
+                const response = await axios.get('http://localhost:5000/api/teachers');
                 console.log(response.data.data);
                 setTeachers(response.data.data);
             } catch (error) {
@@ -42,7 +43,7 @@ function AssignElectives() {
     useEffect(() => {
         const fetchAssignments = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/elective-assignments'); // Changed to localhost
+                const response = await axios.get('http://localhost:5000/api/elective-assignments');
                 console.log(response.data.data);
                 setAssignments(response.data.data);
             } catch (error) {
@@ -55,13 +56,13 @@ function AssignElectives() {
 
     const handleAssign = async () => {
         try {
-            await axios.post('http://localhost:5000/api/elective-assignments', { // Changed to localhost
+            await axios.post('http://localhost:5000/api/elective-assignments', {
                 subjectId: selectedSubject,
-                teacherId: selectedTeachers,
+                teacherId: selectedTeachers.map(teacher => teacher.value),  // Adjusted to handle react-select format
             });
             console.log('Assignment successful');
             toast.success('Assignment successful');
-            const response = await axios.get('http://localhost:5000/api/elective-assignments'); // Changed to localhost
+            const response = await axios.get('http://localhost:5000/api/elective-assignments');
             console.log(response.data.data);
             setAssignments(response.data.data);
         } catch (error) {
@@ -79,7 +80,7 @@ function AssignElectives() {
                     label: 'Yes',
                     onClick: async () => {
                         try {
-                            await axios.delete(`http://localhost:5000/api/elective-assignments/${AssignmentId}`); // Changed to localhost
+                            await axios.delete(`http://localhost:5000/api/elective-assignments/${AssignmentId}`);
                             toast.success('Assignment deleted successfully');
                             const updatedAssignments = assignments.filter(assignment => assignment._id !== AssignmentId);
                             setAssignments(updatedAssignments);
@@ -103,6 +104,12 @@ function AssignElectives() {
     const assignedSubjectIds = assignments.map(assignment => assignment.subjectId[0]?._id);
 
     const availableSubjects = subjects.filter(subject => subject.subjectType === 'Elective' && !assignedSubjectIds.includes(subject._id));
+
+    // Format teacher data for react-select
+    const teacherOptions = teachers.map(teacher => ({
+        value: teacher._id,
+        label: teacher.teacherName
+    }));
 
     return (
         <>
@@ -129,13 +136,15 @@ function AssignElectives() {
                             </div>
 
                             <div className="col-md-6 mb-3">
-                                <label htmlFor="teacher" className="form-label custom-label">Choose Teacher:</label>
-                                <select id="teacher" className="form-select custom-select" multiple onChange={(e) => setSelectedTeachers(Array.from(e.target.selectedOptions, option => option.value))}>
-                                    <option value="">Select Teacher(s)</option>
-                                    {teachers.map(teacher => (
-                                        <option key={teacher._id} value={teacher._id}>{teacher.teacherName}</option>
-                                    ))}
-                                </select>
+                                <label htmlFor="teacher" className="form-label custom-label">Choose Teacher(s):</label>
+                                <Select
+                                    id="teacher"
+                                    options={teacherOptions}
+                                    isMulti
+                                    onChange={(selectedOptions) => setSelectedTeachers(selectedOptions || [])}
+                                    placeholder="Select Teacher(s)"
+                                />
+                                <small className="form-text text-muted">Hold `Ctrl` or `Cmd` to select multiple teachers.</small>
                             </div>
                         </div>
 
