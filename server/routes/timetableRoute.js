@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { generateAllTimeTables, getTimeTable } = require('../controllers/server');
-
+const { getTeacherTimetable } = require('../controllers/server');
 const {
     addSubject,
     fetchSubject,
@@ -84,4 +84,6 @@ router.get('/semesters', async (req, res) => {
 
 router.post('/timetable/generate-all', generateAllTimeTables);
 router.get('/timetable', getTimeTable);
+router.get('/timetable/teacher', getTeacherTimetable);
+
 module.exports = router;

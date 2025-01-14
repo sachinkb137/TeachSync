@@ -50,32 +50,11 @@ function TimeTableDashboard() {
         }
     };
 
-    const generateAllTimetables = async () => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            await axios.post('http://localhost:5000/api/timetable/generate-all');
-            alert('All timetables generated successfully!');
-        } catch (err) {
-            setError('Failed to generate all timetables');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
         <div className="dashboard-container">
             <div className="dashboard-card">
                 <div className="dashboard-header">
-                    <h1>Timetable Dashboard</h1>
-                    <button
-                        onClick={generateAllTimetables}
-                        disabled={loading}
-                        className="dashboard-generate-btn"
-                    >
-                        Generate All Timetables
-                    </button>
+                    <h1>Student Dashboard</h1>
                 </div>
 
                 <div className="dashboard-form">

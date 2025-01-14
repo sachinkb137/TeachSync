@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { usePDF } from 'react-to-pdf';
-import TimeTable from '../Pages/Generate/TimeTable'; // Ensure this is a default import
-import '../Pages/Generate/TimeTableDashboard.css'; // Import the updated CSS
+import TimeTable from '../Pages/Generate/TimeTable';
+import '../Pages/Generate/TimeTableDashboard.css';
 
 function TimeTableDashboard() {
-    const [departments, setDepartments] = useState([]);
-    const [semesters, setSemesters] = useState([]);
-    const [department, setDepartment] = useState('');
-    const [semester, setSemester] = useState('');
-    const [timetable, setTimetable] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const { toPDF, targetRef } = usePDF({ filename: 'timetable.pdf' });
+    const [departments, setDepartments] = useState([]); // List of departments
+    const [semesters, setSemesters] = useState([]); // List of semesters
+    const [department, setDepartment] = useState(''); // Selected department
+    const [semester, setSemester] = useState(''); // Selected semester
+    const [timetable, setTimetable] = useState(null); // Timetable data
+    const [loading, setLoading] = useState(false); // Loading state
+    const [error, setError] = useState(null); // Error state
+    const teacherId = localStorage.getItem('teacherId'); // Retrieve teacher ID from localStorage
 
+    // Fetch departments and semesters on component mount
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -24,58 +24,54 @@ function TimeTableDashboard() {
                 setDepartments(deptRes.data);
                 setSemesters(semRes.data);
             } catch (err) {
-                setError('Failed to load data');
+                console.error('Error fetching departments or semesters:', err);
+                setError('Failed to load department or semester data');
             }
         };
 
         fetchData();
     }, []);
 
+    // Fetch timetable based on selected department, semester, and teacherId
     const fetchTimetable = async () => {
-        if (!department || !semester) return;
-
+        if (!department || !semester || !teacherId) {
+            setError('Please select all fields and ensure you are logged in.');
+            return;
+        }
+    
         setLoading(true);
-        setError(null);
-
+        setError(null); // Reset error state
+    
+        console.log('Fetching timetable with:', { department, semester, teacherId });
+    
         try {
-            const response = await axios.get('http://localhost:5000/api/timetable', {
-                params: { department, semester },
+            const response = await axios.get('http://localhost:5000/api/timetable/teacher', {
+                params: { department, semester, teacherId }, // Check if teacherId is passed
             });
-            setTimetable(response.data.data);
+            console.log('Response:', response);
+            if (response.data && response.data.data) {
+                console.log('Fetched timetable:', response.data.data);
+                setTimetable(response.data.data); // Set timetable data
+            } else {
+                console.warn('No timetable data returned:', response.data);
+                setError('No timetable available for the selected department and semester.');
+                setTimetable(null);
+            }
         } catch (err) {
+            console.error('Error fetching timetable:', err);
             setError('Failed to fetch timetable');
             setTimetable(null);
         } finally {
-            setLoading(false);
+            setLoading(false); // Reset loading state
         }
     };
-
-    const generateAllTimetables = async () => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            await axios.post('http://localhost:5000/api/timetable/generate-all');
-            alert('All timetables generated successfully!');
-        } catch (err) {
-            setError('Failed to generate all timetables');
-        } finally {
-            setLoading(false);
-        }
-    };
+    
 
     return (
         <div className="dashboard-container">
             <div className="dashboard-card">
                 <div className="dashboard-header">
                     <h1>Timetable Dashboard</h1>
-                    <button
-                        onClick={generateAllTimetables}
-                        disabled={loading}
-                        className="dashboard-generate-btn"
-                    >
-                        Generate All Timetables
-                    </button>
                 </div>
 
                 <div className="dashboard-form">
@@ -135,19 +131,15 @@ function TimeTableDashboard() {
                     </div>
                 )}
 
+                {timetable === null && !loading && !error && (
+                    <div className="dashboard-no-data">
+                        <p>No timetable available for the selected department and semester.</p>
+                    </div>
+                )}
+
                 {timetable && !loading && (
-                    <div>
-                        <div className="dashboard-btn-container">
-                            <button
-                                onClick={toPDF}
-                                className="dashboard-download-btn"
-                            >
-                                Download PDF
-                            </button>
-                        </div>
-                        <div ref={targetRef}>
-                            <TimeTable data={timetable} />
-                        </div>
+                    <div className="dashboard-timetable">
+                        <TimeTable data={timetable} />
                     </div>
                 )}
             </div>

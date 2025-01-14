@@ -103,3 +103,63 @@ exports.getTimeTable = async (req, res) => {
         });
     }
 };
+exports.getTeacherTimetable = async (req, res) => {
+  try {
+      const { department, semester, teacherId } = req.query;
+
+      // Check if all required parameters are present
+      if (!department || !semester || !teacherId) {
+          return res.status(400).json({
+              success: false,
+              error: 'Missing required parameters',
+          });
+      }
+
+      // Fetch teacher details
+      const teacher = await Teacher.findOne({ teacherID: teacherId });
+      if (!teacher) {
+          return res.status(404).json({
+              success: false,
+              error: 'Teacher not found',
+          });
+      }
+
+      // Find the timetable for the given department and semester
+      const timeTable = await TimeTable.findOne({
+          department,
+          semester,
+          isActive: true,
+      })
+          .populate('slots.subject')
+          .populate('slots.teacher');
+
+
+      // Filter slots to include only those assigned to the specific teacher
+      const teacherSlots = timeTable.slots.filter(
+          (slot) => slot.teacher._id.toString() === teacher._id.toString()
+      );
+
+      // If the teacher has no slots in the timetable, return an error
+      if (teacherSlots.length === 0) {
+          return res.status(403).json({
+              success: false,
+              error: 'You are not handling any subjects in this timetable. You can view only your timetable.',
+          });
+      }
+
+      res.status(200).json({
+          success: true,
+          data: {
+              department,
+              semester,
+              teacherName: teacher.teacherName,
+              slots: teacherSlots,
+          },
+      });
+  } catch (error) {
+      res.status(500).json({
+          success: false,
+          error: error.message,
+      });
+  }
+};
