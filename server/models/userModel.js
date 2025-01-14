@@ -1,13 +1,15 @@
 const mongoose = require('mongoose');
-
-// Define the schema
 const userSchema = new mongoose.Schema({
     role: {
         type: String,
         enum: ['admin', 'teacher', 'student'], // Roles
         required: true
     },
-    // Fields specific to students
+    username: {
+        type: String,
+        unique: true,
+        sparse: true // This will allow `null` or missing values without violating the unique constraint
+    },
     usn: {
         type: String,
         required: function () {
@@ -18,14 +20,12 @@ const userSchema = new mongoose.Schema({
         },
         trim: true
     },
-    // Fields specific to teachers and students
     dob: {
         type: Date,
         required: function () {
-            return this.role === 'teacher' || this.role === 'student'; // Required for both teachers and students
+            return this.role === 'teacher' || this.role === 'student'; // Required for teachers and students
         }
     },
-    // Fields specific to admins
     email: {
         type: String,
         required: function () {
@@ -49,6 +49,7 @@ const userSchema = new mongoose.Schema({
         default: Date.now
     }
 });
+
 
 // Create and export the model
 const User = mongoose.model('User', userSchema);

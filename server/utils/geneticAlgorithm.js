@@ -13,38 +13,64 @@ class TimeTableGeneticAlgorithm {
         const hours = [];
         const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
         const saturday = ['Saturday'];
-
+    
+        // Define break periods
+        const breaks = [
+            { startTime: '10:00', endTime: '10:30' }, // Morning break
+            { startTime: '12:30', endTime: '14:00' }  // Lunch break
+        ];
+    
+        const isBreakTime = (startTime, endTime) => {
+            return breaks.some(breakSlot =>
+                (startTime >= breakSlot.startTime && startTime < breakSlot.endTime) ||
+                (endTime > breakSlot.startTime && endTime <= breakSlot.endTime)
+            );
+        };
+    
         for (const day of weekDays) {
             for (let hour = 8; hour < 10; hour++) {
-                hours.push({ day, startTime: `${hour}:00`, endTime: `${hour + 1}:00` });
+                const startTime = `${hour}:00`;
+                const endTime = `${hour + 1}:00`;
+                if (!isBreakTime(startTime, endTime)) {
+                    hours.push({ day, startTime, endTime });
+                }
             }
             for (let hour = 10.5; hour < 12.5; hour++) {
-                hours.push({ 
-                    day, 
-                    startTime: `${Math.floor(hour)}:${hour % 1 ? '30' : '00'}`,
-                    endTime: `${Math.floor(hour + 1)}:${(hour + 1) % 1 ? '30' : '00'}`,
-                });
+                const startTime = `${Math.floor(hour)}:${hour % 1 ? '30' : '00'}`;
+                const endTime = `${Math.floor(hour + 1)}:${(hour + 1) % 1 ? '30' : '00'}`;
+                if (!isBreakTime(startTime, endTime)) {
+                    hours.push({ day, startTime, endTime });
+                }
             }
             for (let hour = 14; hour < 18; hour++) {
-                hours.push({ day, startTime: `${hour}:00`, endTime: `${hour + 1}:00` });
+                const startTime = `${hour}:00`;
+                const endTime = `${hour + 1}:00`;
+                if (!isBreakTime(startTime, endTime)) {
+                    hours.push({ day, startTime, endTime });
+                }
             }
         }
-
+    
         for (const day of saturday) {
             for (let hour = 8; hour < 10; hour++) {
-                hours.push({ day, startTime: `${hour}:00`, endTime: `${hour + 1}:00` });
+                const startTime = `${hour}:00`;
+                const endTime = `${hour + 1}:00`;
+                if (!isBreakTime(startTime, endTime)) {
+                    hours.push({ day, startTime, endTime });
+                }
             }
             for (let hour = 10.5; hour < 12.5; hour++) {
-                hours.push({ 
-                    day, 
-                    startTime: `${Math.floor(hour)}:${hour % 1 ? '30' : '00'}`,
-                    endTime: `${Math.floor(hour + 1)}:${(hour + 1) % 1 ? '30' : '00'}`,
-                });
+                const startTime = `${Math.floor(hour)}:${hour % 1 ? '30' : '00'}`;
+                const endTime = `${Math.floor(hour + 1)}:${(hour + 1) % 1 ? '30' : '00'}`;
+                if (!isBreakTime(startTime, endTime)) {
+                    hours.push({ day, startTime, endTime });
+                }
             }
         }
-        
+    
         return hours;
     }
+    
 
     generateInitialPopulation() {
         const population = [];
