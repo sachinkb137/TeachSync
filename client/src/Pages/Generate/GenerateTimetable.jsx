@@ -12,6 +12,7 @@ function TimeTableDashboard() {
     const [timetable, setTimetable] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [generatingTimetable, setGeneratingTimetable] = useState(false); // New state for generating timetable
     const { toPDF, targetRef } = usePDF({ filename: 'timetable.pdf' });
 
     useEffect(() => {
@@ -41,17 +42,17 @@ function TimeTableDashboard() {
             const response = await axios.get('http://localhost:5000/api/timetable', {
                 params: { department, semester },
             });
-            setTimetable(response.data.data);
+            setTimetable(response.data.data); // Storing the fetched timetable in state
         } catch (err) {
             setError('Failed to fetch timetable');
-            setTimetable(null);
+            setTimetable(null); // Reset timetable in case of error
         } finally {
             setLoading(false);
         }
     };
 
     const generateAllTimetables = async () => {
-        setLoading(true);
+        setGeneratingTimetable(true); // Start generating timetable
         setError(null);
 
         try {
@@ -60,7 +61,7 @@ function TimeTableDashboard() {
         } catch (err) {
             setError('Failed to generate all timetables');
         } finally {
-            setLoading(false);
+            setGeneratingTimetable(false); // Finished generating timetable
         }
     };
 
@@ -71,10 +72,10 @@ function TimeTableDashboard() {
                     <h1>Timetable Dashboard</h1>
                     <button
                         onClick={generateAllTimetables}
-                        disabled={loading}
+                        disabled={loading || generatingTimetable}
                         className="dashboard-generate-btn"
                     >
-                        Generate All Timetables
+                        {generatingTimetable ? 'Generating Timetables...' : 'Generate All Timetables'}
                     </button>
                 </div>
 
@@ -114,7 +115,7 @@ function TimeTableDashboard() {
                     <div className="dashboard-btn-container">
                         <button
                             onClick={fetchTimetable}
-                            disabled={!department || !semester || loading}
+                            disabled={!department || !semester || loading || generatingTimetable}
                             className="dashboard-view-btn"
                         >
                             View Timetable
@@ -129,13 +130,20 @@ function TimeTableDashboard() {
                     </div>
                 )}
 
-                {loading && (
+                {loading && !generatingTimetable && (
                     <div className="dashboard-loading-spinner">
                         <div className="dashboard-spinner"></div>
                     </div>
                 )}
 
-                {timetable && !loading && (
+                {generatingTimetable && (
+                    <div className="dashboard-generating-message">
+                        <p>Generating timetables, please wait...</p>
+                        <div className="dashboard-spinner"></div>
+                    </div>
+                )}
+
+                {timetable && !loading && !generatingTimetable && (
                     <div>
                         <div className="dashboard-btn-container">
                             <button
@@ -146,6 +154,7 @@ function TimeTableDashboard() {
                             </button>
                         </div>
                         <div ref={targetRef}>
+                            {/* Displaying the timetable in TimeTable component */}
                             <TimeTable data={timetable} />
                         </div>
                     </div>
