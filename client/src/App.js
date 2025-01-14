@@ -13,8 +13,9 @@ import AssignRooms from './Pages/Assign/AssignRooms';
 import AssignElective from './Pages/Assign/AssignElective';
 import AssignLab from './Pages/Assign/AssignLab';
 import AssignTheory from './Pages/Assign/AssignTheory';
-import GenerateTimetable from './Pages/Generate/GenerateTimetable'
-
+import GenerateTimetable from './Pages/Generate/GenerateTimetable';
+import StudentDashboard from './Pages/StudentDashboard';
+import TeacherDashboard from './Pages/TeacherDashboard';
 import Home from './Pages/Home'
 import './styling/HomePage.css'
 import About from './Pages/About';
@@ -40,7 +41,8 @@ function App() {
         <Route path="/assign-rooms" element={<AssignRooms />} />
         <Route path="/generate" element={<AddSubjects/>}></Route>
         <Route path="/generate-timetable" element={<GenerateTimetable />}></Route>
-
+        <Route path="/student-dashboard" element={<StudentDashboard />}></Route>
+        <Route path="/teacher-dashboard" element={<TeacherDashboard />}></Route>
       </Routes>
     </Router>
   );
