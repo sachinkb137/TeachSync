@@ -12,7 +12,7 @@ function TimeTableDashboard() {
     const [timetable, setTimetable] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const { toPDF, targetRef } = usePDF({ filename: 'timetable.pdf' });
+    const { toPDF, targetRef } = usePDF({ filename: 'studenttimetable.pdf' });
 
     useEffect(() => {
         const fetchData = async () => {

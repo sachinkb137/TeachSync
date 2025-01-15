@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import TimeTable from '../Pages/Generate/TimeTable';
 import '../Pages/Generate/TimeTableDashboard.css';
-
+import { usePDF } from 'react-to-pdf';
 function TimeTableDashboard() {
     const [departments, setDepartments] = useState([]); // List of departments
     const [semesters, setSemesters] = useState([]); // List of semesters
@@ -12,7 +12,7 @@ function TimeTableDashboard() {
     const [loading, setLoading] = useState(false); // Loading state
     const [error, setError] = useState(null); // Error state
     const teacherId = localStorage.getItem('teacherId'); // Retrieve teacher ID from localStorage
-
+    const { toPDF, targetRef } = usePDF({ filename: 'teachertimetable.pdf' });
     // Fetch departments and semesters on component mount
     useEffect(() => {
         const fetchData = async () => {
@@ -71,7 +71,7 @@ function TimeTableDashboard() {
         <div className="dashboard-container">
             <div className="dashboard-card">
                 <div className="dashboard-header">
-                    <h1>Timetable Dashboard</h1>
+                    <h1>Teacher Timetable Dashboard</h1>
                 </div>
 
                 <div className="dashboard-form">
@@ -130,13 +130,21 @@ function TimeTableDashboard() {
                         <div className="dashboard-spinner"></div>
                     </div>
                 )}
-
-                {timetable === null && !loading && !error && (
-                    <div className="dashboard-no-data">
-                        <p>No timetable available for the selected department and semester.</p>
+                 {timetable && !loading && (
+                    <div>
+                        <div className="dashboard-btn-container">
+                            <button
+                                onClick={toPDF}
+                                className="dashboard-download-btn"
+                            >
+                                Download PDF
+                            </button>
+                        </div>
+                        <div ref={targetRef}>
+                            <TimeTable data={timetable} />
+                        </div>
                     </div>
                 )}
-
                 {timetable && !loading && (
                     <div className="dashboard-timetable">
                         <TimeTable data={timetable} />
