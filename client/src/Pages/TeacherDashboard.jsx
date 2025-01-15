@@ -3,6 +3,7 @@ import axios from 'axios';
 import TimeTable from '../Pages/Generate/TimeTable';
 import '../Pages/Generate/TimeTableDashboard.css';
 import { usePDF } from 'react-to-pdf';
+
 function TimeTableDashboard() {
     const [departments, setDepartments] = useState([]); // List of departments
     const [semesters, setSemesters] = useState([]); // List of semesters
@@ -13,6 +14,7 @@ function TimeTableDashboard() {
     const [error, setError] = useState(null); // Error state
     const teacherId = localStorage.getItem('teacherId'); // Retrieve teacher ID from localStorage
     const { toPDF, targetRef } = usePDF({ filename: 'teachertimetable.pdf' });
+
     // Fetch departments and semesters on component mount
     useEffect(() => {
         const fetchData = async () => {
@@ -38,22 +40,17 @@ function TimeTableDashboard() {
             setError('Please select all fields and ensure you are logged in.');
             return;
         }
-    
+
         setLoading(true);
         setError(null); // Reset error state
-    
-        console.log('Fetching timetable with:', { department, semester, teacherId });
-    
+
         try {
             const response = await axios.get('http://localhost:5000/api/timetable/teacher', {
-                params: { department, semester, teacherId }, // Check if teacherId is passed
+                params: { department, semester, teacherId },
             });
-            console.log('Response:', response);
             if (response.data && response.data.data) {
-                console.log('Fetched timetable:', response.data.data);
                 setTimetable(response.data.data); // Set timetable data
             } else {
-                console.warn('No timetable data returned:', response.data);
                 setError('No timetable available for the selected department and semester.');
                 setTimetable(null);
             }
@@ -65,7 +62,6 @@ function TimeTableDashboard() {
             setLoading(false); // Reset loading state
         }
     };
-    
 
     return (
         <div className="dashboard-container">
@@ -130,7 +126,8 @@ function TimeTableDashboard() {
                         <div className="dashboard-spinner"></div>
                     </div>
                 )}
-                 {timetable && !loading && (
+
+                {timetable && !loading && (
                     <div>
                         <div className="dashboard-btn-container">
                             <button
@@ -140,14 +137,9 @@ function TimeTableDashboard() {
                                 Download PDF
                             </button>
                         </div>
-                        <div ref={targetRef}>
+                        <div ref={targetRef} className="dashboard-timetable">
                             <TimeTable data={timetable} />
                         </div>
-                    </div>
-                )}
-                {timetable && !loading && (
-                    <div className="dashboard-timetable">
-                        <TimeTable data={timetable} />
                     </div>
                 )}
             </div>
