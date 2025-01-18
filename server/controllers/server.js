@@ -68,13 +68,24 @@ exports.getTimeTable = async (req, res) => {
     try {
         const { department, semester } = req.query;
 
-        const timeTable = await TimeTable.findOne({
-            department,
-            semester,
-            isActive: true,
-        })
-            .populate('slots.subject')
-            .populate('slots.teacher');
+        let timeTable;
+
+        if (department && semester) {
+            // Fetch timetable based on department and semester
+            timeTable = await TimeTable.findOne({
+                department,
+                semester,
+                isActive: true,
+            })
+                .populate('slots.subject')
+                .populate('slots.teacher');
+        } else {
+            // Fetch the latest timetable
+            timeTable = await TimeTable.findOne({ isActive: true })
+                .sort({ createdAt: -1 })
+                .populate('slots.subject')
+                .populate('slots.teacher');
+        }
 
         if (!timeTable) {
             return res.status(404).json({
@@ -103,6 +114,7 @@ exports.getTimeTable = async (req, res) => {
         });
     }
 };
+
 exports.getTeacherTimetable = async (req, res) => {
   try {
       const { department, semester, teacherId } = req.query;

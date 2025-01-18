@@ -13,20 +13,20 @@ class TimeTableGeneticAlgorithm {
         const hours = [];
         const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
         const saturday = ['Saturday'];
-    
+
         // Define break periods
         const breaks = [
             { startTime: '10:00', endTime: '10:30' }, // Morning break
             { startTime: '12:30', endTime: '14:00' }  // Lunch break
         ];
-    
+
         const isBreakTime = (startTime, endTime) => {
             return breaks.some(breakSlot =>
                 (startTime >= breakSlot.startTime && startTime < breakSlot.endTime) ||
                 (endTime > breakSlot.startTime && endTime <= breakSlot.endTime)
             );
         };
-    
+
         for (const day of weekDays) {
             for (let hour = 8; hour < 10; hour++) {
                 const startTime = `${hour}:00`;
@@ -50,7 +50,7 @@ class TimeTableGeneticAlgorithm {
                 }
             }
         }
-    
+
         for (const day of saturday) {
             for (let hour = 8; hour < 10; hour++) {
                 const startTime = `${hour}:00`;
@@ -67,10 +67,9 @@ class TimeTableGeneticAlgorithm {
                 }
             }
         }
-    
+
         return hours;
     }
-    
 
     generateInitialPopulation() {
         const population = [];
@@ -86,11 +85,12 @@ class TimeTableGeneticAlgorithm {
         const assignedSlots = new Set();
         const subjectDayCount = new Map();
 
+        // Elective Subjects Allocation
         const electiveSubjects = this.subjects.filter(s => s.subjectType === 'Elective');
         for (const subject of electiveSubjects) {
             const availableSlots = this.workingHours.filter(slot => {
                 const [hour] = slot.startTime.split(':').map(Number);
-                return hour === 16;
+                return hour === 16; // Example: Only considering 4 PM slots for electives
             });
 
             for (let i = 0; i < subject.teachingHoursPerWeek; i++) {
@@ -109,12 +109,14 @@ class TimeTableGeneticAlgorithm {
             }
         }
 
+        // Lab Subjects Allocation (Consecutive slots, no breaks between them)
         const labSubjects = this.subjects.filter(s => s.subjectType === 'Lab');
         for (const subject of labSubjects) {
             let hoursScheduled = 0;
 
             while (hoursScheduled < subject.teachingHoursPerWeek) {
-                const availableSlots = this.getConsecutiveSlots(2, assignedSlots);
+                // Find consecutive slots that don't have a break between them
+                const availableSlots = this.getConsecutiveSlots(2, assignedSlots, true);
                 if (availableSlots.length >= 2) {
                     const teacher = this.getTeacherForSubject(subject._id);
                     if (teacher) {
@@ -133,14 +135,15 @@ class TimeTableGeneticAlgorithm {
             }
         }
 
+        // Theory Subjects Allocation
         const theorySubjects = this.subjects.filter(s => s.subjectType === 'Theory');
         for (const subject of theorySubjects) {
             let hoursScheduled = 0;
 
             while (hoursScheduled < subject.teachingHoursPerWeek) {
-                const availableSlots = this.workingHours.filter(slot => 
+                const availableSlots = this.workingHours.filter(slot =>
                     !assignedSlots.has(`${slot.day}-${slot.startTime}`));
-                
+
                 const daySlots = availableSlots.filter(slot => {
                     const dayKey = `${slot.day}-${subject._id}`;
                     const count = subjectDayCount.get(dayKey) || 0;
@@ -170,11 +173,11 @@ class TimeTableGeneticAlgorithm {
         return chromosome;
     }
 
-    getConsecutiveSlots(count, assignedSlots) {
+    getConsecutiveSlots(count, assignedSlots, noBreaks = false) {
         const availableSlots = this.workingHours.filter(slot => {
             const [hour] = slot.startTime.split(':').map(Number);
             return !assignedSlots.has(`${slot.day}-${slot.startTime}`) &&
-                   hour < 16;
+                   hour < 16; // Filtering out slots after 4 PM
         });
 
         const consecutiveSlots = [];
@@ -182,72 +185,56 @@ class TimeTableGeneticAlgorithm {
             const current = availableSlots[i];
             const next = availableSlots[i + 1];
 
+            // Ensure consecutive slots are in the same day
             if (current.day === next.day) {
                 const currentHour = parseInt(current.startTime.split(':')[0]);
                 const nextHour = parseInt(next.startTime.split(':')[0]);
 
+                // Check if the slots are consecutive and respect the break rule
                 if (nextHour - currentHour === 1) {
-                    consecutiveSlots.push([current, next]);
+                    if (noBreaks) {
+                        // Ensure there is no break between the consecutive slots
+                        const currentSlotEndTime = `${currentHour + 1}:00`;
+                        const nextSlotStartTime = `${nextHour}:00`;
+
+                        if (!this.isBreakTime(currentSlotEndTime, nextSlotStartTime)) {
+                            consecutiveSlots.push([current, next]);
+                        }
+                    } else {
+                        consecutiveSlots.push([current, next]);
+                    }
                 }
             }
         }
 
-        return consecutiveSlots.length > 0 ? 
+        return consecutiveSlots.length > 0 ?
             this.getRandomElement(consecutiveSlots) : [];
     }
 
     getTeacherForSubject(subjectId) {
-        const assignment = this.assignments.find(a => 
+        const assignment = this.assignments.find(a =>
             a.subjectId.includes(subjectId));
-        return assignment ? 
+        return assignment ?
             this.getRandomElement(assignment.teacherId) : null;
     }
 
-    calculateFitness(chromosome) {
-        let fitness = 100;
-        const teacherClashes = new Map();
-        const semesterClashes = new Map();
-
-        chromosome.forEach((slot1, i) => {
-            chromosome.forEach((slot2, j) => {
-                if (i !== j && slot1.day === slot2.day && 
-                    slot1.startTime === slot2.startTime) {
-                    if (slot1.teacher === slot2.teacher) {
-                        fitness -= 10;
-                        teacherClashes.set(
-                            `${slot1.day}-${slot1.startTime}-${slot1.teacher}`, 
-                            (teacherClashes.get(
-                                `${slot1.day}-${slot1.startTime}-${slot1.teacher}`) || 0) + 1
-                        );
-                    }
-
-                    if (slot1.semester === slot2.semester) {
-                        const subject1 = this.subjects.find(s => s._id === slot1.subject);
-                        const subject2 = this.subjects.find(s => s._id === slot2.subject);
-
-                        if (subject1.subjectType !== 'Elective' || 
-                            subject2.subjectType !== 'Elective') {
-                            fitness -= 10;
-                            semesterClashes.set(
-                                `${slot1.day}-${slot1.startTime}-${slot1.semester}`,
-                                (semesterClashes.get(
-                                    `${slot1.day}-${slot1.startTime}-${slot1.semester}`) || 0) + 1
-                            );
-                        }
-                    }
-                }
-            });
-        });
-
-        return Math.max(0, fitness);
+    isBreakTime(startTime, endTime) {
+        const breaks = [
+            { startTime: '10:00', endTime: '10:30' },
+            { startTime: '12:30', endTime: '14:00' }
+        ];
+        return breaks.some(breakSlot =>
+            (startTime >= breakSlot.startTime && startTime < breakSlot.endTime) ||
+            (endTime > breakSlot.startTime && endTime <= breakSlot.endTime)
+        );
     }
 
     crossover(parent1, parent2) {
         const crossoverPoint = Math.floor(Math.random() * parent1.length);
-        const child1 = [...parent1.slice(0, crossoverPoint), 
-                        ...parent2.slice(crossoverPoint)];
-        const child2 = [...parent2.slice(0, crossoverPoint), 
-                        ...parent1.slice(crossoverPoint)];
+        const child1 = [...parent1.slice(0, crossoverPoint),
+            ...parent2.slice(crossoverPoint)];
+        const child2 = [...parent2.slice(0, crossoverPoint),
+            ...parent1.slice(crossoverPoint)];
         return [child1, child2];
     }
 
@@ -255,8 +242,8 @@ class TimeTableGeneticAlgorithm {
         if (Math.random() < this.mutationRate) {
             const idx1 = Math.floor(Math.random() * chromosome.length);
             const idx2 = Math.floor(Math.random() * chromosome.length);
-            
-            [chromosome[idx1], chromosome[idx2]] = 
+
+            [chromosome[idx1], chromosome[idx2]] =
                 [chromosome[idx2], chromosome[idx1]];
         }
         return chromosome;
@@ -265,7 +252,77 @@ class TimeTableGeneticAlgorithm {
     getRandomElement(array) {
         return array[Math.floor(Math.random() * array.length)];
     }
-
+    calculateFitness(chromosome) {
+        let fitness = 0;
+        const assignedSlots = new Set();
+    
+        const subjectCounts = new Map(); // Count how many times each subject is scheduled
+        const teacherSchedules = new Map(); // Track teacher schedules to ensure no double booking
+    
+        // Iterate over all slots in the chromosome
+        for (const slot of chromosome) {
+            const { day, startTime, subject, teacher } = slot;
+    
+            // Ensure no double-booking of slots (same day and start time)
+            if (assignedSlots.has(`${day}-${startTime}`)) {
+                fitness -= 50; // Penalty for double-booking
+            } else {
+                assignedSlots.add(`${day}-${startTime}`);
+            }
+    
+            // Track subject counts to ensure correct teaching hours per week
+            if (!subjectCounts.has(subject)) {
+                subjectCounts.set(subject, 0);
+            }
+            subjectCounts.set(subject, subjectCounts.get(subject) + 1);
+    
+            // Track teacher schedules to avoid double-booking teachers
+            if (!teacherSchedules.has(teacher)) {
+                teacherSchedules.set(teacher, new Set());
+            }
+            if (teacherSchedules.get(teacher).has(`${day}-${startTime}`)) {
+                fitness -= 50; // Penalty for double-booking a teacher
+            } else {
+                teacherSchedules.get(teacher).add(`${day}-${startTime}`);
+            }
+        }
+    
+        // Add points for each subject being scheduled the correct number of hours
+        for (const subject of this.subjects) {
+            if (subjectCounts.has(subject._id) && subjectCounts.get(subject._id) === subject.teachingHoursPerWeek) {
+                fitness += 100; // Reward for correct teaching hours
+            } else {
+                fitness -= 10; // Penalty for insufficient or excessive teaching hours
+            }
+        }
+    
+        // Add penalty if there are any subjects that are not scheduled at all
+        for (const subject of this.subjects) {
+            if (!subjectCounts.has(subject._id)) {
+                fitness -= 100; // Penalty for unscheduled subjects
+            }
+        }
+    
+        // Optionally, add logic to penalize break violations, consecutive lab slot violations, etc.
+        // For example:
+        const breaks = [
+            { startTime: '10:00', endTime: '10:30' },
+            { startTime: '12:30', endTime: '14:00' }
+        ];
+    
+        for (const breakSlot of breaks) {
+            const { startTime, endTime } = breakSlot;
+            // Penalize if any class is scheduled during a break
+            for (const slot of chromosome) {
+                if (slot.startTime >= startTime && slot.startTime < endTime) {
+                    fitness -= 30; // Penalty for scheduling during break
+                }
+            }
+        }
+    
+        return fitness;
+    }
+    
     evolve() {
         let population = this.generateInitialPopulation();
         let bestSolution = null;
