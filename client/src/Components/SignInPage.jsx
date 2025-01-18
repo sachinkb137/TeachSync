@@ -64,19 +64,20 @@ function SignInPage() {
             const data = await response.json();
 
             if (response.ok) {
-                // Save user details (including teacherID) if provided
+                // Save user details based on role
                 const username = data.user?.username || data.user?.teacherName || data.user?.studentName || "User";
-                const teacherID = data.user?.teacherID || null;  // For teachers, we store teacherID
+                const role = formData.signInType; // Use signInType to store the role
                 const token = data.token || null;
 
                 localStorage.setItem("username", username);
-                 
-                if (teacherID) {
-                    localStorage.setItem("teacherId", teacherID);  // Store teacherID in localStorage
+                localStorage.setItem("role", role); // Save the role explicitly
+
+                if (role === "teacher" && data.user?.teacherID) {
+                    localStorage.setItem("teacherId", data.user.teacherID); // Save teacherID for teachers
                 }
-                
+
                 if (token) {
-                    localStorage.setItem("authToken", token);  // Store the auth token in localStorage
+                    localStorage.setItem("authToken", token); // Save the auth token
                 }
 
                 toast.success(`Welcome, ${username}!`, {
@@ -84,12 +85,13 @@ function SignInPage() {
                     autoClose: 3000,
                 });
 
-                if (signInType === "admin") {
-                    navigate("/");
-                } else if (signInType === "teacher") {
-                    navigate("/teacher-dashboard");
-                } else if (signInType === "student") {
-                    navigate("/student-dashboard");
+                // Redirect based on role
+                if (role === "admin") {
+                    navigate("/"); // Admin dashboard
+                } else if (role === "teacher") {
+                    navigate("/teacher-dashboard"); // Teacher dashboard
+                } else if (role === "student") {
+                    navigate("/student-dashboard"); // Student dashboard
                 }
             } else {
                 toast.error(data.message || "An error occurred. Please try again.", { position: "top-right", autoClose: 3000 });

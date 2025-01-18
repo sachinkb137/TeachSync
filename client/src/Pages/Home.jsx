@@ -9,13 +9,28 @@ import Footer from './Footer';
 export default function Home() {
     const navigate = useNavigate();
 
-    const handleGenerateTimetable = () => {
-        const isLoggedIn = localStorage.getItem('username');
+    const handleButtonClick = () => {
+        const username = localStorage.getItem('username');
+        const role = localStorage.getItem('role'); // Assume 'role' is saved as 'admin', 'teacher', or 'student'
 
-        if (isLoggedIn) {
-            navigate('/generate');
+        if (!username) {
+            toast.error('Please login first.', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+        } else if (role === 'admin') {
+            navigate('/generate'); // Navigate to timetable generation page for admin
+        } else if (role === 'teacher') {
+            navigate('/teacher-dashboard'); // Navigate to teacher dashboard
+        } else if (role === 'student') {
+            navigate('/student-dashboard'); // Navigate to student dashboard
         } else {
-            toast.error('Please login first to generate a timetable.', {
+            toast.error('Invalid user role. Please contact support.', {
                 position: "top-right",
                 autoClose: 3000,
                 hideProgressBar: false,
@@ -25,6 +40,20 @@ export default function Home() {
                 progress: undefined,
             });
         }
+    };
+
+    const getButtonText = () => {
+        const username = localStorage.getItem('username');
+        const role = localStorage.getItem('role');
+
+        if (!username) {
+            return 'Generate Timetable'; // Before signing in, always show "Generate Timetable"
+        } else if (role === 'admin') {
+            return 'Generate Timetable'; // Admins see this after signing in
+        } else if (role === 'teacher' || role === 'student') {
+            return 'Go to Dashboard'; // Teachers and students see this after signing in
+        }
+        return 'Generate Timetable'; // Default fallback
     };
 
     return (
@@ -46,11 +75,11 @@ export default function Home() {
                                 <button
                                     style={{ fontWeight: "bold", fontSize: "19px" }}
                                     className="btn btn-outline-primary"
-                                    onClick={handleGenerateTimetable}
+                                    onClick={handleButtonClick}
                                 >
-                                    Generate Timetable
+                                    {getButtonText()}
                                 </button>
-                            </div> 
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -62,9 +91,9 @@ export default function Home() {
                     </div>
                 </div>
             </section>
-            <About/>
+            <About />
             <Features />
-            <Footer/>
+            <Footer />
             <ToastContainer />
         </div>
     );
