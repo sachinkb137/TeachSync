@@ -77,7 +77,7 @@ function TimeTable({ data }) {
                       <div className="slot-details">
                         <div className="subject-name">{slot.subjectName}</div>
                         <div className="teacher-name">{slot.teacherName}</div>
-                        <div className="room">Room: {slot.room}</div>
+                        {/* <div className="room">Room: {slot.room}</div> */}
                         <div className={`subject-type ${slot.subjectType.toLowerCase()}`}>
                           {slot.subjectType}
                         </div>

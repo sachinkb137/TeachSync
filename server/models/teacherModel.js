@@ -1,3 +1,4 @@
+//models/teacherModel.js
 const mongoose = require('mongoose');
 
 const teacherSchema = new mongoose.Schema({
@@ -13,7 +14,12 @@ const teacherSchema = new mongoose.Schema({
   designation: {
     type: String,
     required: true
+  },
+  subjectSpecialization: {
+    type: String,
+    required: false
   }
+
 });
 
 const Teacher = mongoose.model('Teacher', teacherSchema);

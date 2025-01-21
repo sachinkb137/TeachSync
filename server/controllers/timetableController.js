@@ -117,22 +117,35 @@ exports.deleteSubject = async (req, res) => {
 
 // Teacher
 
+// controllers/teacherController.js
 exports.addTeacher = async (req, res) => {
     try {
-        const { teacherName, teacherID, designation } = req.body;
-        if (!teacherName || !teacherID || !designation) {
-            return res.status(400).json({ success: false, message: "All fields are required." });
-        }
-        const newTeacher = await Teacher.create({ teacherName, teacherID, designation });
-        res.status(201).json({ success: true, data: newTeacher });
+      const { teacherName, teacherID, designation, subjectSpecialization } = req.body;
+  
+      // Check if the necessary fields are provided
+      if (!teacherName || !teacherID || !designation) {
+        return res.status(400).json({ success: false, message: "Teacher name, ID, and designation are required." });
+      }
+  
+      // If subjectSpecialization is provided, it will be included; if not, it'll be set to null
+      const newTeacher = await Teacher.create({
+        teacherName,
+        teacherID,
+        designation,
+        subjectSpecialization: subjectSpecialization || null,  // Optional field
+      });
+  
+      res.status(201).json({ success: true, data: newTeacher });
     } catch (error) {
-        if (error.code === 11000) {
-            return res.status(400).json({ success: false, message: "Teacher ID must be unique." });
-        }
-        console.error("Error adding teacher:", error.message);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
+      if (error.code === 11000) {
+        return res.status(400).json({ success: false, message: "Teacher ID must be unique." });
+      }
+      console.error("Error adding teacher:", error.message);
+      res.status(500).json({ success: false, message: "Internal Server Error" });
     }
-};
+  };
+  
+
 
 
 exports.fetchTeacher = async (req, res) => {

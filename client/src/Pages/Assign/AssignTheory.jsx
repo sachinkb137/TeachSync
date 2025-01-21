@@ -17,7 +17,7 @@ function AssignTheory() {
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/subjects');  // Updated to localhost:5000
+        const response = await axios.get('http://localhost:5000/api/subjects');
         setSubjects(response.data.data);
       } catch (error) {
         console.error('Error fetching subjects:', error);
@@ -26,7 +26,7 @@ function AssignTheory() {
 
     const fetchTeachers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/teachers');  // Updated to localhost:5000
+        const response = await axios.get('http://localhost:5000/api/teachers');
         setTeachers(response.data.data);
       } catch (error) {
         console.error('Error fetching teachers:', error);
@@ -40,7 +40,7 @@ function AssignTheory() {
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/theory-assignments');  // Updated to localhost:5000
+        const response = await axios.get('http://localhost:5000/api/theory-assignments');
         setAssignments(response.data.data);
       } catch (error) {
         console.error('Error fetching assignments:', error);
@@ -51,13 +51,27 @@ function AssignTheory() {
   }, []);
 
   const handleAssign = async () => {
+    // Find the selected teacher
+    const selectedTeacherData = teachers.find(teacher => teacher._id === selectedTeacher);
+
+    if (selectedTeacherData) {
+      // If the teacher has a specialization, check if it matches the subject
+      if (selectedTeacherData.subjectSpecialization) {
+        const subject = subjects.find(sub => sub._id === selectedSubject);
+        if (subject && subject.subjectName !== selectedTeacherData.subjectSpecialization) {
+          toast.error('Teacher specialization does not match the selected subject');
+          return;
+        }
+      }
+    }
+
     try {
-      await axios.post('http://localhost:5000/api/theory-assignments', {  // Updated to localhost:5000
+      await axios.post('http://localhost:5000/api/theory-assignments', {
         subjectId: selectedSubject,
         teacherId: selectedTeacher,
       });
       toast.success('Assignment successful');
-      const response = await axios.get('http://localhost:5000/api/theory-assignments');  // Updated to localhost:5000
+      const response = await axios.get('http://localhost:5000/api/theory-assignments');
       setAssignments(response.data.data);
     } catch (error) {
       console.error('Error assigning:', error);
@@ -74,7 +88,7 @@ function AssignTheory() {
           label: 'Yes',
           onClick: async () => {
             try {
-              await axios.delete(`http://localhost:5000/api/theory-assignments/${AssignmentId}`);  // Updated to localhost:5000
+              await axios.delete(`http://localhost:5000/api/theory-assignments/${AssignmentId}`);
               toast.success('Assignment deleted successfully');
               const updatedAssignments = assignments.filter(assignment => assignment._id !== AssignmentId);
               setAssignments(updatedAssignments);
@@ -128,7 +142,9 @@ function AssignTheory() {
                 <select id="teacher" className="form-select custom-select" onChange={(e) => setSelectedTeacher(e.target.value)}>
                   <option value="">Select Teacher</option>
                   {teachers.map(teacher => (
-                    <option key={teacher._id} value={teacher._id}>{teacher.teacherName}</option>
+                    <option key={teacher._id} value={teacher._id}>
+                      {teacher.teacherName} {teacher.subjectSpecialization && `- ${teacher.subjectSpecialization}`}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -158,24 +174,16 @@ function AssignTheory() {
                       .map((item, index) => (
                         <tr key={index} className={index % 2 === 0 ? 'table-light' : 'table-secondary'}>
                           <td>
-                            {item.teacherId.map(teacher => (
-                              teacher.teacherName
-                            )).join(', ')}
+                            {item.teacherId.map(teacher => teacher.teacherName).join(', ')}
                           </td>
                           <td>
-                            {item.subjectId.map(subject => (
-                              subject.subjectName
-                            )).join(', ')}
+                            {item.subjectId.map(subject => subject.subjectName).join(', ')}
                           </td>
                           <td>
-                            {item.subjectId.map(subject => (
-                              subject.department
-                            )).join(', ')}
+                            {item.subjectId.map(subject => subject.department).join(', ')}
                           </td>
                           <td>
-                            {item.subjectId.map(subject => (
-                              subject.semester
-                            )).join(', ')}
+                            {item.subjectId.map(subject => subject.semester).join(', ')}
                           </td>
                           <td>
                             <button className="btn btn-danger" onClick={() => handleDeleteAssignment(item._id)}>Delete</button>
