@@ -5,17 +5,23 @@ import '../Pages/Generate/TimeTableDashboard.css';
 import { usePDF } from 'react-to-pdf';
 
 function TimeTableDashboard() {
-    const [departments, setDepartments] = useState([]); // List of departments
-    const [semesters, setSemesters] = useState([]); // List of semesters
-    const [department, setDepartment] = useState(''); // Selected department
-    const [semester, setSemester] = useState(''); // Selected semester
-    const [timetable, setTimetable] = useState(null); // Timetable data
-    const [loading, setLoading] = useState(false); // Loading state
-    const [error, setError] = useState(null); // Error state
-    const teacherId = localStorage.getItem('teacherId'); // Retrieve teacher ID from localStorage
+    const [departments, setDepartments] = useState([]);
+    const [semesters, setSemesters] = useState([]);
+    const [department, setDepartment] = useState('');
+    const [semester, setSemester] = useState('');
+    const [timetable, setTimetable] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [showData, setShowData] = useState(false);
+    const teacherId = localStorage.getItem('teacherId');
     const { toPDF, targetRef } = usePDF({ filename: 'teachertimetable.pdf' });
 
-    // Fetch departments and semesters on component mount
+    const [hours, setHours] = useState({
+        theoryHours: 0,
+        labHours: 0,
+        electiveHours: 0, // New field for elective hours
+    });
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -34,7 +40,6 @@ function TimeTableDashboard() {
         fetchData();
     }, []);
 
-    // Fetch timetable based on selected department, semester, and teacherId
     const fetchTimetable = async () => {
         if (!department || !semester || !teacherId) {
             setError('Please select all fields and ensure you are logged in.');
@@ -42,25 +47,66 @@ function TimeTableDashboard() {
         }
 
         setLoading(true);
-        setError(null); // Reset error state
+        setError(null);
 
         try {
             const response = await axios.get('http://localhost:5000/api/timetable/teacher', {
                 params: { department, semester, teacherId },
             });
+
             if (response.data && response.data.data) {
-                setTimetable(response.data.data); // Set timetable data
+                setTimetable(response.data.data);
+                calculateHours(response.data.data);
+
+                response.data.data.slots.forEach((slot, index) => {
+                    console.log(`Slot ${index + 1}:`, slot);
+                    if (slot.subject?.subjectType === 'Elective') {
+                        console.log(`Elective Subject Details:`, slot.subject);
+                    }
+                });
             } else {
                 setError('No timetable available for the selected department and semester.');
                 setTimetable(null);
+                setHours({ theoryHours: 0, labHours: 0, electiveHours: 0 });
             }
         } catch (err) {
             console.error('Error fetching timetable:', err);
             setError('Failed to fetch timetable');
             setTimetable(null);
+            setHours({ theoryHours: 0, labHours: 0, electiveHours: 0 });
         } finally {
-            setLoading(false); // Reset loading state
+            setLoading(false);
         }
+    };
+
+    const calculateHours = (data) => {
+        let theoryHours = 0;
+        let labHours = 0;
+        let electiveHours = 0;
+
+        if (data && data.slots) {
+            data.slots.forEach((slot) => {
+                if (slot.teacher && slot.teacher.teacherID === teacherId) {
+                    const duration = getSlotDuration(slot.startTime, slot.endTime);
+
+                    if (slot.subject?.subjectType === 'Theory') {
+                        theoryHours += duration;
+                    } else if (slot.subject?.subjectType === 'Lab') {
+                        labHours += duration;
+                    } else if (slot.subject?.subjectType === 'Elective') {
+                        electiveHours += duration;
+                    }
+                }
+            });
+        }
+
+        setHours({ theoryHours, labHours, electiveHours });
+    };
+
+    const getSlotDuration = (startTime, endTime) => {
+        const [startHour, startMinute] = startTime.split(':').map(Number);
+        const [endHour, endMinute] = endTime.split(':').map(Number);
+        return (endHour + endMinute / 60) - (startHour + startMinute / 60);
     };
 
     return (
@@ -111,6 +157,14 @@ function TimeTableDashboard() {
                         >
                             View Timetable
                         </button>
+                        {timetable && (
+                            <button
+                                onClick={() => setShowData(!showData)}
+                                className="dashboard-view-data-btn"
+                            >
+                                {showData ? 'Hide Data' : 'View Data'}
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -130,15 +184,44 @@ function TimeTableDashboard() {
                 {timetable && !loading && (
                     <div>
                         <div className="dashboard-btn-container">
-                            <button
-                                onClick={toPDF}
-                                className="dashboard-download-btn"
-                            >
+                            <button onClick={toPDF} className="dashboard-download-btn">
                                 Download PDF
                             </button>
                         </div>
+
+                        {showData && (
+                            <div className="dashboard-table-container">
+                                <table className="dashboard-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Particulars</th>
+                                            <th>Units</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Theory</td>
+                                            <td>{hours.theoryHours.toFixed(2)} hrs</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Laboratory</td>
+                                            <td>{hours.labHours.toFixed(2)} hrs</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Elective</td>
+                                            <td>{hours.electiveHours.toFixed(2)} hrs</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Total</td>
+                                            <td>{(hours.theoryHours + hours.labHours + hours.electiveHours).toFixed(2)} hrs</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
                         <div ref={targetRef} className="dashboard-timetable">
-                            <TimeTable data={timetable} />
+                            <TimeTable data={timetable} teacherName={teacherId} />
                         </div>
                     </div>
                 )}
